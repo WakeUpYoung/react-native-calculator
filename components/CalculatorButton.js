@@ -12,8 +12,9 @@ export default class CalculatorButton extends Component {
     static propTypes = {
         value: PropTypes.string.isRequired,
         type: PropTypes.number.isRequired,
-        textStyle: PropTypes.object,
-        image: PropTypes.element
+        fun: PropTypes.func.isRequired,
+        textStyle: PropTypes.any,
+        image: PropTypes.element,
     };
 
     getTextStyle() {
@@ -40,7 +41,7 @@ export default class CalculatorButton extends Component {
     render() {
         return(
             <TouchableNativeFeedback
-                onPress={() => ToastAndroid.show(this.props.value, ToastAndroid.SHORT, ToastAndroid.CENTER)}>
+                onPress={() => this.props.fun(this.props.value, this.props.type)}>
                 {this.getContent()}
             </TouchableNativeFeedback>
         )

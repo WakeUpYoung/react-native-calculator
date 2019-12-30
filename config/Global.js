@@ -11,7 +11,10 @@ export default {
     type: {
         number: 1,
         operator: 2,
-        other: 3
+        equals: 3,
+        ac: 4,
+        del: 5,
+        other: 999
     },
     operator: {
         addition: '+',

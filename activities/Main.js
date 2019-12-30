@@ -1,18 +1,56 @@
 import React, {Component} from 'react';
-import {Text, View, StyleSheet, FlatList, SafeAreaView, Image} from 'react-native';
+import {Text, View, StyleSheet, FlatList, SafeAreaView, Image, ToastAndroid} from 'react-native';
 import Global from '../config/Global';
 import CalculatorButton from '../components/CalculatorButton';
 
 export default class MainApp extends Component {
 
     constructor(props){
-        super(props)
+        super(props);
+        this.state = {
+            text: '1+1=2',
+            onPressValue: '',
+            onPressType: '',
+            calculating: '',
+            numberStack: [],
+            operationStack: [],
+            historyArray: []
+        };
+        this.onClickCalculatorBtn = this.onClickCalculatorBtn.bind(this);
+        this.doButtonNeedDo = this.doButtonNeedDo.bind(this);
     }
 
     fetchData() {
         return [
-            {a: 111}, {a: 222}, {a: 3}
+            {a: '111'}, {a: '222'}, {a: '3'}
         ]
+    }
+
+    onClickCalculatorBtn(onPressVal, onPressType) {
+        let numberStack = this.state.numberStack;
+        numberStack.push(onPressVal);
+        let calculatingText = numberStack.join('');
+        this.setState({
+            onPressValue: onPressVal,
+            onPressType: onPressType,
+            calculating: calculatingText,
+            numberStack: numberStack
+        }, () => this.doButtonNeedDo());
+    }
+
+    doButtonNeedDo() {
+        switch (this.state.onPressType) {
+            case Global.type.ac:
+                this.setState({
+                    calculating: '',
+                    numberStack: [],
+                    operationStack: []
+                });
+                break;
+            default:
+                // do nothing
+                break;
+        }
     }
 
     render() {
@@ -29,46 +67,68 @@ export default class MainApp extends Component {
                                       </View>
                                   }/>
                     </View>
+                    {/* Result */}
                     <View style={styles.result}>
-                        <Text style={styles.resultText}>0</Text>
+                        <Text style={styles.resultText}>{this.state.calculating}</Text>
                     </View>
                 </View>
                 <View style={styles.keyboard}>
                     {/* first line AC, DEL, %, ÷ */}
                     <View style={styles.buttonGroup}>
-                        <CalculatorButton value={'AC'} type={Global.type.other} textStyle={[styles.operationText, {fontSize: 35}]}/>
-                        <CalculatorButton value={'DEL'} type={Global.type.other}
+                        <CalculatorButton fun={this.onClickCalculatorBtn} value={'AC'} type={Global.type.ac}
+                                          textStyle={[styles.operationText, {fontSize: 35}]}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'DEL'} type={Global.type.other}
                                           image={<Image source={require('../res/img/delete.png')}/>} />
-                        <CalculatorButton textStyle={styles.operationText} value={'%'} type={Global.type.other}/>
-                        <CalculatorButton value={Global.operator.division} type={Global.type.operator}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          textStyle={styles.operationText} value={'%'} type={Global.type.other}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={Global.operator.division} type={Global.type.operator}/>
                     </View>
                     {/* second line 7 8 9 ✕ */}
                     <View style={styles.buttonGroup}>
-                        <CalculatorButton value={'7'} type={Global.type.number}/>
-                        <CalculatorButton value={'8'} type={Global.type.number}/>
-                        <CalculatorButton value={'9'} type={Global.type.number}/>
-                        <CalculatorButton value={'⨯'} type={Global.type.operator}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'7'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'8'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'9'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'⨯'} type={Global.type.operator}/>
                     </View>
                     {/* third line 4 5 6 - */}
                     <View style={styles.buttonGroup}>
-                        <CalculatorButton value={'4'} type={Global.type.number}/>
-                        <CalculatorButton value={'5'} type={Global.type.number}/>
-                        <CalculatorButton value={'6'} type={Global.type.number}/>
-                        <CalculatorButton value={Global.operator.subtraction} type={Global.type.operator}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'4'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'5'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'6'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={Global.operator.subtraction} type={Global.type.operator}/>
                     </View>
                     {/* 4th line 1 2 3 + */}
                     <View style={styles.buttonGroup}>
-                        <CalculatorButton value={'1'} type={Global.type.number}/>
-                        <CalculatorButton value={'2'} type={Global.type.number}/>
-                        <CalculatorButton value={'3'} type={Global.type.number}/>
-                        <CalculatorButton value={Global.operator.addition} type={Global.type.operator}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'1'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'2'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'3'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={Global.operator.addition} type={Global.type.operator}/>
                     </View>
                     {/* 5th line +- 0 . = */}
                     <View style={styles.buttonGroup}>
-                        <CalculatorButton value={'+/-'} type={Global.type.operator}/>
-                        <CalculatorButton value={'0'} type={Global.type.number}/>
-                        <CalculatorButton value={'.'} type={Global.type.number}/>
-                        <CalculatorButton value={'='} type={Global.type.other} image={<Image source={require('../res/img/equal_circle_fill.png')}/>}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'+/-'} type={Global.type.operator}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'0'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'.'} type={Global.type.number}/>
+                        <CalculatorButton fun={this.onClickCalculatorBtn}
+                                          value={'='} type={Global.type.other}
+                                          image={<Image source={require('../res/img/equal_circle_fill.png')}/>}/>
                     </View>
 
                 </View>
