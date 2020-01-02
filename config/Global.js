@@ -7,7 +7,8 @@ export default {
     handWritten: '沐瑶软笔手写体',
     windowWidth : Dimensions.get('window').width,
     windowHeight : Dimensions.get('window').height,
-    currentVersion: '1.1.0',
+    defaultValue: '0',
+    emptyArray: [],
     type: {
         number: 1,
         operator: 2,
@@ -19,7 +20,7 @@ export default {
     operator: {
         addition: '+',
         subtraction: '—',
-        multiplication: '✕',
+        multiplication: '⨯',
         division: '÷'
     }
 }

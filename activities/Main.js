@@ -8,16 +8,19 @@ export default class MainApp extends Component {
     constructor(props){
         super(props);
         this.state = {
-            text: '1+1=2',
+            text: Global.defaultValue,
+            result: null,
             onPressValue: '',
             onPressType: '',
-            calculating: '',
-            numberStack: [],
-            operationStack: [],
+            lastOnPressType: null,
+            calculating: Global.defaultValue,
             historyArray: []
         };
         this.onClickCalculatorBtn = this.onClickCalculatorBtn.bind(this);
         this.doButtonNeedDo = this.doButtonNeedDo.bind(this);
+        this.whenNumber = this.whenNumber.bind(this);
+        this.whenOperator = this.whenOperator.bind(this);
+        this.calculateResult = this.calculateResult.bind(this);
     }
 
     fetchData() {
@@ -27,14 +30,9 @@ export default class MainApp extends Component {
     }
 
     onClickCalculatorBtn(onPressVal, onPressType) {
-        let numberStack = this.state.numberStack;
-        numberStack.push(onPressVal);
-        let calculatingText = numberStack.join('');
         this.setState({
             onPressValue: onPressVal,
-            onPressType: onPressType,
-            calculating: calculatingText,
-            numberStack: numberStack
+            onPressType: onPressType
         }, () => this.doButtonNeedDo());
     }
 
@@ -42,14 +40,83 @@ export default class MainApp extends Component {
         switch (this.state.onPressType) {
             case Global.type.ac:
                 this.setState({
-                    calculating: '',
-                    numberStack: [],
-                    operationStack: []
+                    calculating: Global.defaultValue,
+                    text: Global.defaultValue,
+                    result: null,
+                    lastOnPressType: null,
                 });
                 break;
+            case Global.type.number:
+                this.whenNumber();
+                break;
+            case Global.type.operator:
+                this.whenOperator();
+                break;
+            case Global.type.equals:
+                this.calculateResult();
             default:
                 // do nothing
                 break;
+        }
+    }
+
+    // when press number
+    whenNumber() {
+        let onPressValue = this.state.onPressValue;
+        let calculating = this.state.calculating;
+        let text = this.state.text;
+        if (text === Global.defaultValue) {
+            text = onPressValue;
+            calculating = onPressValue
+        } else {
+            text += onPressValue;
+            calculating += onPressValue;
+        }
+        this.setState({
+            calculating: calculating,
+            text: text,
+            lastOnPressType: this.state.onPressType
+        })
+    }
+
+    // when press Operator
+    whenOperator() {
+        let calculating = this.state.calculating;
+        let text = this.state.text;
+        if (this.state.lastOnPressType === Global.type.operator) {
+            text = text.substring(0, text.length - 1) + this.state.onPressValue;
+            calculating = calculating.substring(0, calculating.length - 1) + MainApp.getRealOperator(this.state.onPressValue);
+        } else {
+            text += this.state.onPressValue;
+            calculating += MainApp.getRealOperator(this.state.onPressValue);
+        }
+        this.setState({
+            calculating: calculating,
+            lastOnPressType: this.state.onPressType,
+            text: text
+        })
+    }
+
+    calculateResult() {
+        let res = eval(this.state.calculating);
+        this.setState({
+            lastOnPressType: this.state.onPressType,
+            text: res
+        })
+    }
+
+    static getRealOperator(operator) {
+        switch (operator) {
+            case Global.operator.addition:
+                return '+';
+            case Global.operator.subtraction:
+                return '-';
+            case Global.operator.multiplication:
+                return '*';
+            case Global.operator.division:
+                return '/';
+            default:
+                return null;
         }
     }
 
@@ -69,7 +136,7 @@ export default class MainApp extends Component {
                     </View>
                     {/* Result */}
                     <View style={styles.result}>
-                        <Text style={styles.resultText}>{this.state.calculating}</Text>
+                        <Text style={styles.resultText}>{this.state.text}</Text>
                     </View>
                 </View>
                 <View style={styles.keyboard}>
@@ -94,7 +161,7 @@ export default class MainApp extends Component {
                         <CalculatorButton fun={this.onClickCalculatorBtn}
                                           value={'9'} type={Global.type.number}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
-                                          value={'⨯'} type={Global.type.operator}/>
+                                          value={Global.operator.multiplication} type={Global.type.operator}/>
                     </View>
                     {/* third line 4 5 6 - */}
                     <View style={styles.buttonGroup}>
@@ -127,7 +194,7 @@ export default class MainApp extends Component {
                         <CalculatorButton fun={this.onClickCalculatorBtn}
                                           value={'.'} type={Global.type.number}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
-                                          value={'='} type={Global.type.other}
+                                          value={'='} type={Global.type.equals}
                                           image={<Image source={require('../res/img/equal_circle_fill.png')}/>}/>
                     </View>
 
