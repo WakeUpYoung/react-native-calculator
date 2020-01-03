@@ -24,7 +24,7 @@ export default class CalculatorButton extends Component {
         if (this.props.type === Global.type.number) {
             return styles.numberText
         }
-        if (this.props.type === Global.type.operator) {
+        if (this.props.type === Global.type.operator || this.props.type === Global.type.sign) {
             return styles.operationText
         }
         return styles.numberText

@@ -15,6 +15,8 @@ export default {
         equals: 3,
         ac: 4,
         del: 5,
+        percent: 6,
+        sign: 7,
         other: 999
     },
     operator: {

@@ -9,24 +9,19 @@ export default class MainApp extends Component {
         super(props);
         this.state = {
             text: Global.defaultValue,
-            result: null,
             onPressValue: '',
             onPressType: '',
             lastOnPressType: null,
             calculating: Global.defaultValue,
+            result: null,
             historyArray: []
         };
         this.onClickCalculatorBtn = this.onClickCalculatorBtn.bind(this);
         this.doButtonNeedDo = this.doButtonNeedDo.bind(this);
         this.whenNumber = this.whenNumber.bind(this);
         this.whenOperator = this.whenOperator.bind(this);
-        this.calculateResult = this.calculateResult.bind(this);
-    }
-
-    fetchData() {
-        return [
-            {a: '111'}, {a: '222'}, {a: '3'}
-        ]
+        this.whenEquals = this.whenEquals.bind(this);
+        this.whenDel = this.whenDel.bind(this);
     }
 
     onClickCalculatorBtn(onPressVal, onPressType) {
@@ -44,6 +39,7 @@ export default class MainApp extends Component {
                     text: Global.defaultValue,
                     result: null,
                     lastOnPressType: null,
+                    historyArray: []
                 });
                 break;
             case Global.type.number:
@@ -53,7 +49,11 @@ export default class MainApp extends Component {
                 this.whenOperator();
                 break;
             case Global.type.equals:
-                this.calculateResult();
+                this.whenEquals();
+                break;
+            case Global.type.del:
+                this.whenDel();
+                break;
             default:
                 // do nothing
                 break;
@@ -69,8 +69,16 @@ export default class MainApp extends Component {
             text = onPressValue;
             calculating = onPressValue
         } else {
-            text += onPressValue;
-            calculating += onPressValue;
+            if (this.state.lastOnPressType === Global.type.equals) {
+                text = onPressValue;
+                calculating = onPressValue
+            } else {
+                if (text.length >= 10) {
+                    return;
+                }
+                text += onPressValue;
+                calculating += onPressValue;
+            }
         }
         this.setState({
             calculating: calculating,
@@ -97,12 +105,63 @@ export default class MainApp extends Component {
         })
     }
 
-    calculateResult() {
+    whenEquals() {
+        if (this.state.text === Global.defaultValue) {
+            return;
+        }
         let res = eval(this.state.calculating);
+        let historyArray = this.state.historyArray;
+        let text = this.state.text;
+        let value = text + '=' + res;
+        historyArray.push({
+            key: Math.random().toString(36).slice(8),
+            value: value
+        });
         this.setState({
             lastOnPressType: this.state.onPressType,
-            text: res
+            result: res,
+            historyArray: historyArray
+        }, () => console.info(this.state.calculating))
+    }
+
+    whenDel() {
+        let currentText = this.state.text;
+        if (currentText === Global.defaultValue) {
+            return;
+        }
+        if (this.state.lastOnPressType === Global.type.equals) {
+            return;
+        }
+        console.log('current text is : ' + currentText + ' text.length: ' + currentText.length);
+        // when there's only a letter
+        if (currentText.length === 1) {
+            this.setState({
+                calculating: Global.defaultValue,
+                text: Global.defaultValue,
+                lastOnPressType: null
+            });
+            return;
+        }
+        // when there're more than one letters
+        let afterDelText = MainApp.delLastLetter(currentText);
+        let calculating = this.state.calculating;
+        let afterDelCalculating = MainApp.delLastLetter(calculating);
+        console.log('afterDel: ' + afterDelText);
+        let lastLetter = MainApp.getLastLetter(afterDelText);
+        console.log('text: last letter is ' + lastLetter);
+        this.setState({
+            text: afterDelText,
+            calculating: afterDelCalculating,
+            lastOnPressType: null
         })
+    }
+
+    static delLastLetter(text) {
+        return text.substring(0, text.length - 1);
+    }
+
+    static getLastLetter(text) {
+        return text.substring(text.length - 1, text.length);
     }
 
     static getRealOperator(operator) {
@@ -125,18 +184,19 @@ export default class MainApp extends Component {
             <SafeAreaView style={styles.main}>
                 <View style={[styles.inputArea]}>
                     <View style={[styles.history]}>
-                        <FlatList data={this.fetchData()}
-                                  keyExtractor={item => item.a}
+                        <FlatList data={this.state.historyArray}
+                                  keyExtractor={item => item.key}
                                   style={{flexDirection: 'column-reverse'}}
                                   renderItem={({item}) =>
                                       <View style={styles.historyView}>
-                                        <Text style={styles.historyText}>{[item.a]}</Text>
+                                        <Text style={styles.historyText}>{item.value}</Text>
                                       </View>
                                   }/>
                     </View>
                     {/* Result */}
                     <View style={styles.result}>
-                        <Text style={styles.resultText}>{this.state.text}</Text>
+                        <Text style={styles.calculatingText}>{this.state.text}</Text>
+                        <Text style={[styles.resultText, {display: this.state.result ? 'flex': 'none'}]}>= {this.state.result}</Text>
                     </View>
                 </View>
                 <View style={styles.keyboard}>
@@ -145,7 +205,7 @@ export default class MainApp extends Component {
                         <CalculatorButton fun={this.onClickCalculatorBtn} value={'AC'} type={Global.type.ac}
                                           textStyle={[styles.operationText, {fontSize: 35}]}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
-                                          value={'DEL'} type={Global.type.other}
+                                          value={'DEL'} type={Global.type.del}
                                           image={<Image source={require('../res/img/delete.png')}/>} />
                         <CalculatorButton fun={this.onClickCalculatorBtn}
                                           textStyle={styles.operationText} value={'%'} type={Global.type.other}/>
@@ -188,7 +248,7 @@ export default class MainApp extends Component {
                     {/* 5th line +- 0 . = */}
                     <View style={styles.buttonGroup}>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
-                                          value={'+/-'} type={Global.type.operator}/>
+                                          value={'+/-'} type={Global.type.sign}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
                                           value={'0'} type={Global.type.number}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
@@ -225,6 +285,7 @@ const styles = StyleSheet.create({
     },
     history: {
         flex: 5,
+        paddingBottom: 60
     },
     historyView: {
         alignItems: 'flex-end',
@@ -237,9 +298,13 @@ const styles = StyleSheet.create({
         color: '#c2c2c2'
     },
     result: {
-        flex: 2,
+        flex: 3,
         alignItems: 'flex-end',
         justifyContent: 'flex-end'
+    },
+    calculatingText: {
+        fontSize: 50,
+        color: Global.fontColor
     },
     resultText: {
         fontSize: 50,
