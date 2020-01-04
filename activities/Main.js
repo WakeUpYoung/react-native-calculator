@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Text, View, StyleSheet, FlatList, SafeAreaView, Image, ToastAndroid} from 'react-native';
+import {FlatList, Image, SafeAreaView, StyleSheet, Text, ToastAndroid, View} from 'react-native';
 import Global from '../config/Global';
 import CalculatorButton from '../components/CalculatorButton';
 
@@ -75,13 +75,15 @@ export default class MainApp extends Component {
         let onPressValue = this.state.onPressValue;
         let calculating = this.state.calculating;
         let text = this.state.text;
+        let result = this.state.result;
         if (text === Global.defaultValue) {
             text = onPressValue;
             calculating = onPressValue
         } else {
             if (this.state.lastOnPressType === Global.type.equals) {
                 text = onPressValue;
-                calculating = onPressValue
+                calculating = onPressValue;
+                result = null;
             } else {
                 if (text.length >= 10) {
                     return;
@@ -93,7 +95,8 @@ export default class MainApp extends Component {
         this.setState({
             calculating: calculating,
             text: text,
-            lastOnPressType: this.state.onPressType
+            lastOnPressType: this.state.onPressType,
+            result: result
         })
     }
 
@@ -119,7 +122,10 @@ export default class MainApp extends Component {
         if (this.state.text === Global.defaultValue) {
             return;
         }
-        let res = eval(this.state.calculating);
+        let calculating = this.state.calculating;
+        let math = 'Math.fround(' + calculating + ')';
+        let res = eval(math);
+        console.log('The Math ', math, res);
         let historyArray = this.state.historyArray;
         let text = this.state.text;
         let value = text + '=' + res;
@@ -131,7 +137,7 @@ export default class MainApp extends Component {
             lastOnPressType: this.state.onPressType,
             result: res,
             historyArray: historyArray
-        }, () => console.info(this.state.calculating))
+        }, () => console.info(calculating))
     }
 
     whenDel() {
@@ -156,9 +162,6 @@ export default class MainApp extends Component {
         let afterDelText = MainApp.delLastLetter(currentText);
         let calculating = this.state.calculating;
         let afterDelCalculating = MainApp.delLastLetter(calculating);
-        console.log('afterDel: ' + afterDelText);
-        let lastLetter = MainApp.getLastLetter(afterDelText);
-        console.log('text: last letter is ' + lastLetter);
         this.setState({
             text: afterDelText,
             calculating: afterDelCalculating,
@@ -171,28 +174,36 @@ export default class MainApp extends Component {
         let calculating = this.state.calculating;
         let lastLetter = MainApp.getLastLetter(text);
         let theLastValidText = MainApp.getTheLastValidText(text);
+        let result = this.state.result;
         if (this.state.lastOnPressType === Global.type.point) {
             return;
         }
         if (MainApp.judgementLetterType(lastLetter) === Global.type.point) {
             return;
         }
-        if (MainApp.judgementLastTextType(text) === Global.type.operator) {
-            calculating = calculating + Global.defaultValue + '.';
-            text = text + Global.defaultValue + '.';
+        if (this.state.lastOnPressType === Global.type.equals) {
+            text = Global.defaultValue + this.state.onPressValue;
+            calculating = Global.defaultValue + this.state.onPressValue;
+            result = null;
         } else {
-            theLastValidText += '.';
-            if (isNaN(theLastValidText)) {
-                return;
+            if (MainApp.judgementLastTextType(text) === Global.type.operator) {
+                text = text + Global.defaultValue + '.';
+                calculating = calculating + Global.defaultValue + '.';
             } else {
-                calculating += '.';
-                text += '.';
+                theLastValidText += '.';
+                if (isNaN(theLastValidText)) {
+                    return;
+                } else {
+                    calculating += '.';
+                    text += '.';
+                }
             }
         }
         this.setState({
             calculating: calculating,
             text: text,
-            lastOnPressType: this.state.onPressType
+            lastOnPressType: this.state.onPressType,
+            result: result
         })
 
     } // when point
@@ -214,9 +225,7 @@ export default class MainApp extends Component {
             return text;
         }
         let split = text.split(Global.operatorRegex);
-        let lastValidText = split[split.length - 1];
-        console.log('the last valid text is ' + lastValidText);
-        return lastValidText;
+        return split[split.length - 1];
     }
 
     static judgementLetterType(letter) {
@@ -278,7 +287,7 @@ export default class MainApp extends Component {
                     {/* Result */}
                     <View style={styles.result}>
                         <Text style={styles.calculatingText}>{this.state.text}</Text>
-                        <Text style={[styles.resultText, {display: this.state.result ? 'flex': 'none'}]}>= {this.state.result}</Text>
+                        <Text style={[styles.resultText, {display: this.state.result != null ? 'flex': 'none'}]}>= {this.state.result}</Text>
                     </View>
                 </View>
                 <View style={styles.keyboard}>
