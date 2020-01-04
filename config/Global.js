@@ -17,6 +17,7 @@ export default {
         del: 5,
         percent: 6,
         sign: 7,
+        point: 8,
         other: 999
     },
     operator: {
@@ -24,5 +25,6 @@ export default {
         subtraction: '—',
         multiplication: '⨯',
         division: '÷'
-    }
+    },
+    operatorRegex: /[+—⨯÷]/
 }

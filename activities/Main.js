@@ -22,6 +22,7 @@ export default class MainApp extends Component {
         this.whenOperator = this.whenOperator.bind(this);
         this.whenEquals = this.whenEquals.bind(this);
         this.whenDel = this.whenDel.bind(this);
+        this.whenPoint = this.whenPoint.bind(this);
     }
 
     onClickCalculatorBtn(onPressVal, onPressType) {
@@ -54,11 +55,20 @@ export default class MainApp extends Component {
             case Global.type.del:
                 this.whenDel();
                 break;
+            case Global.type.point:
+                this.whenPoint();
+                break;
+            case Global.type.sign:
+                ToastAndroid.show('DLC未购买', ToastAndroid.SHORT);
+                break;
+            case Global.type.percent:
+                ToastAndroid.show('DLC未购买', ToastAndroid.SHORT);
+                break;
             default:
                 // do nothing
                 break;
         }
-    }
+    } // do Button need do
 
     // when press number
     whenNumber() {
@@ -91,7 +101,7 @@ export default class MainApp extends Component {
     whenOperator() {
         let calculating = this.state.calculating;
         let text = this.state.text;
-        if (this.state.lastOnPressType === Global.type.operator) {
+        if (MainApp.judgementLetterType(MainApp.getLastLetter(text)) === Global.type.operator) {
             text = text.substring(0, text.length - 1) + this.state.onPressValue;
             calculating = calculating.substring(0, calculating.length - 1) + MainApp.getRealOperator(this.state.onPressValue);
         } else {
@@ -154,7 +164,38 @@ export default class MainApp extends Component {
             calculating: afterDelCalculating,
             lastOnPressType: null
         })
-    }
+    } // when del
+
+    whenPoint() {
+        let text = this.state.text;
+        let calculating = this.state.calculating;
+        let lastLetter = MainApp.getLastLetter(text);
+        let theLastValidText = MainApp.getTheLastValidText(text);
+        if (this.state.lastOnPressType === Global.type.point) {
+            return;
+        }
+        if (MainApp.judgementLetterType(lastLetter) === Global.type.point) {
+            return;
+        }
+        if (MainApp.judgementLastTextType(text) === Global.type.operator) {
+            calculating = calculating + Global.defaultValue + '.';
+            text = text + Global.defaultValue + '.';
+        } else {
+            theLastValidText += '.';
+            if (isNaN(theLastValidText)) {
+                return;
+            } else {
+                calculating += '.';
+                text += '.';
+            }
+        }
+        this.setState({
+            calculating: calculating,
+            text: text,
+            lastOnPressType: this.state.onPressType
+        })
+
+    } // when point
 
     static delLastLetter(text) {
         return text.substring(0, text.length - 1);
@@ -163,6 +204,47 @@ export default class MainApp extends Component {
     static getLastLetter(text) {
         return text.substring(text.length - 1, text.length);
     }
+
+    static getTheLastValidText(text) {
+        let lastLetter = this.getLastLetter(text);
+        if (this.judgementLetterType(lastLetter) === Global.type.operator) {
+            return lastLetter;
+        }
+        if (!isNaN(text)) {
+            return text;
+        }
+        let split = text.split(Global.operatorRegex);
+        let lastValidText = split[split.length - 1];
+        console.log('the last valid text is ' + lastValidText);
+        return lastValidText;
+    }
+
+    static judgementLetterType(letter) {
+        let numberExp = /[0-9]/;
+        if (numberExp.test(letter)) {
+            return Global.type.number;
+        }
+        if (Global.operator.addition === letter || Global.operator.subtraction === letter
+            || Global.operator.multiplication === letter || Global.operator.division === letter) {
+            return Global.type.operator;
+        }
+        if (letter === '.') {
+            return Global.type.point;
+        }
+        return Global.type.other;
+    } // judgementLetterType
+
+    static judgementLastTextType(text) {
+        let theLastValidText = this.getTheLastValidText(text);
+        if (Global.operator.addition === theLastValidText || Global.operator.subtraction === theLastValidText
+            || Global.operator.multiplication === theLastValidText || Global.operator.division === theLastValidText) {
+            return Global.type.operator;
+        }
+        if (!isNaN(theLastValidText)) {
+            return Global.type.number;
+        }
+        return Global.type.other;
+    } //judgementLastTextType
 
     static getRealOperator(operator) {
         switch (operator) {
@@ -208,7 +290,7 @@ export default class MainApp extends Component {
                                           value={'DEL'} type={Global.type.del}
                                           image={<Image source={require('../res/img/delete.png')}/>} />
                         <CalculatorButton fun={this.onClickCalculatorBtn}
-                                          textStyle={styles.operationText} value={'%'} type={Global.type.other}/>
+                                          textStyle={styles.operationText} value={'%'} type={Global.type.percent}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
                                           value={Global.operator.division} type={Global.type.operator}/>
                     </View>
@@ -252,7 +334,7 @@ export default class MainApp extends Component {
                         <CalculatorButton fun={this.onClickCalculatorBtn}
                                           value={'0'} type={Global.type.number}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
-                                          value={'.'} type={Global.type.number}/>
+                                          value={'.'} type={Global.type.point}/>
                         <CalculatorButton fun={this.onClickCalculatorBtn}
                                           value={'='} type={Global.type.equals}
                                           image={<Image source={require('../res/img/equal_circle_fill.png')}/>}/>
