@@ -123,9 +123,7 @@ export default class MainApp extends Component {
             return;
         }
         let calculating = this.state.calculating;
-        let math = 'Math.fround(' + calculating + ')';
-        let res = eval(math);
-        console.log('The Math ', math, res);
+        let res = parseFloat(eval(calculating).toFixed(10));
         let historyArray = this.state.historyArray;
         let text = this.state.text;
         let value = text + '=' + res;
