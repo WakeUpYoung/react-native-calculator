@@ -26,5 +26,6 @@ export default {
         multiplication: '⨯',
         division: '÷'
     },
-    operatorRegex: /[+—⨯÷]/
+    operatorRegex: /[+—⨯÷]/,
+    infinity: 'Infinity'
 }

@@ -88,6 +88,9 @@ export default class MainApp extends Component {
                 if (text.length >= 10) {
                     return;
                 }
+                if (MainApp.getTheLastValidText(text) === Global.defaultValue) {
+                    return;
+                }
                 text += onPressValue;
                 calculating += onPressValue;
             }
@@ -123,7 +126,17 @@ export default class MainApp extends Component {
             return;
         }
         let calculating = this.state.calculating;
-        let res = parseFloat(eval(calculating).toFixed(10));
+        let divZeroRegex = /[0-9]+(\/0)/;
+        let res;
+        try {
+            res = parseFloat(eval(calculating).toFixed(10));
+        } catch (e) {
+            console.error(e);
+            res = '结果溢出';
+        }
+        if (divZeroRegex.test(calculating) && (res.toString() === Global.infinity || res.toString() === 'NaN')) {
+            res = '不能除以0'
+        }
         let historyArray = this.state.historyArray;
         let text = this.state.text;
         let value = text + '=' + res;
